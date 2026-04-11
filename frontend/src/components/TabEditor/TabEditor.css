@@ -6,10 +6,15 @@
 }
 
 .tab-hidden-input {
-  position: absolute;
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
   opacity: 0;
-  width: 0;
-  height: 0;
+  border: none;
+  padding: 0;
+  pointer-events: none;
 }
 
 .tab-techniques {

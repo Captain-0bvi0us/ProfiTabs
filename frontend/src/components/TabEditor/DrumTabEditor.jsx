@@ -8,6 +8,7 @@ export default function DrumTabEditor({ tabData, onChange, playheadMeasure, play
     : [createEmptyDrumMeasure()];
 
   const [selectedCell, setSelectedCell] = useState(null);
+  const hiddenInputRef = useRef(null);
 
   const update = useCallback((newMeasures) => {
     onChange({ ...tabData, measures: newMeasures });
@@ -19,13 +20,16 @@ export default function DrumTabEditor({ tabData, onChange, playheadMeasure, play
     beat.hits[drumKey] = !beat.hits[drumKey];
     update(newMeasures);
     setSelectedCell({ m: mIdx, b: bIdx, d: drumKey });
+    if (hiddenInputRef.current) {
+      hiddenInputRef.current.focus({ preventScroll: true });
+    }
   };
 
   const handleKeyDown = useCallback((e) => {
     if (!selectedCell) return;
 
     const tag = e.target?.tagName;
-    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    if ((tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') && !e._fromHiddenInput) return;
 
     const { m, b, d } = selectedCell;
     const lineIdx = DRUM_LINES.findIndex(l => l.key === d);
@@ -84,8 +88,42 @@ export default function DrumTabEditor({ tabData, onChange, playheadMeasure, play
     }
   }, [playheadMeasure]);
 
+  const handleHiddenKeyDown = useCallback((e) => {
+    if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', ' ', 'x'].includes(e.key)) {
+      e.preventDefault();
+      const evt = new KeyboardEvent('keydown', { key: e.key, bubbles: true });
+      evt._fromHiddenInput = true;
+      window.dispatchEvent(evt);
+    }
+  }, []);
+
+  const handleHiddenInput = useCallback((e) => {
+    const value = e.target.value;
+    e.target.value = '';
+    for (const char of value) {
+      if (char === 'x' || char === 'X' || char === ' ') {
+        const evt = new KeyboardEvent('keydown', { key: char.toLowerCase(), bubbles: true });
+        evt._fromHiddenInput = true;
+        window.dispatchEvent(evt);
+      }
+    }
+  }, []);
+
   return (
     <div className="drum-tab-editor">
+      <input
+        ref={hiddenInputRef}
+        className="tab-hidden-input"
+        inputMode="text"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        onKeyDown={handleHiddenKeyDown}
+        onInput={handleHiddenInput}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       <div className="tab-measures-scroll" ref={scrollContainerRef}>
         {measures.map((measure, mIdx) => (
           <div key={mIdx} className="tab-measure" data-measure={mIdx}>

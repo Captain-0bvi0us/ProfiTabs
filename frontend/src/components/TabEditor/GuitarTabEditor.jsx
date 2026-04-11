@@ -21,19 +21,54 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
   const activeTechniqueRef = useRef(activeTechnique);
   activeTechniqueRef.current = activeTechnique;
 
+  const advanceTimerRef = useRef(null);
+  const pendingAdvanceRef = useRef(null);
+  const hiddenInputRef = useRef(null);
+
   const update = useCallback((newMeasures) => {
     onChange({ ...tabData, measures: newMeasures, tuning });
   }, [tabData, onChange, tuning]);
 
+  const cancelPendingAdvance = useCallback(() => {
+    if (advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+    pendingAdvanceRef.current = null;
+  }, []);
+
   const handleCellClick = (mIdx, bIdx, sIdx) => {
+    cancelPendingAdvance();
     setSelectedCell({ m: mIdx, b: bIdx, s: sIdx });
+    if (hiddenInputRef.current) {
+      hiddenInputRef.current.focus({ preventScroll: true });
+    }
   };
+
+  const handleHiddenKeyDown = useCallback((e) => {
+    if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Delete', 'Backspace'].includes(e.key)) {
+      e.preventDefault();
+      const evt = new KeyboardEvent('keydown', { key: e.key, bubbles: true });
+      evt._fromHiddenInput = true;
+      window.dispatchEvent(evt);
+    }
+  }, []);
+
+  const handleHiddenInput = useCallback((e) => {
+    const value = e.target.value;
+    e.target.value = '';
+    for (const char of value) {
+      const evt = new KeyboardEvent('keydown', { key: char, bubbles: true });
+      evt._fromHiddenInput = true;
+      window.dispatchEvent(evt);
+    }
+  }, []);
 
   const handleKeyDown = useCallback((e) => {
     if (!selectedCell) return;
 
     const tag = e.target?.tagName;
-    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    if ((tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') && !e._fromHiddenInput) return;
 
     const { m, b, s } = selectedCell;
     const newMeasures = JSON.parse(JSON.stringify(measures));
@@ -48,6 +83,7 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
 
     if (e.key === 'ArrowRight') {
       e.preventDefault();
+      cancelPendingAdvance();
       let nb = b + 1, nm = m;
       if (nb >= BEATS_PER_MEASURE) { nb = 0; nm++; }
       if (nm < newMeasures.length) setSelectedCell({ m: nm, b: nb, s });
@@ -55,6 +91,7 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
     }
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
+      cancelPendingAdvance();
       let nb = b - 1, nm = m;
       if (nb < 0) { nb = BEATS_PER_MEASURE - 1; nm--; }
       if (nm >= 0) setSelectedCell({ m: nm, b: nb, s });
@@ -62,11 +99,13 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
+      cancelPendingAdvance();
       if (s > 0) setSelectedCell({ m, b, s: s - 1 });
       return;
     }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
+      cancelPendingAdvance();
       if (s < stringCount - 1) setSelectedCell({ m, b, s: s + 1 });
       return;
     }
@@ -76,7 +115,8 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
       e.preventDefault();
       const current = beat.notes[s];
       let fret;
-      if (current && current.fret !== null && current.fret < 10 && current.fret > 0) {
+      const canCombine = current && current.fret !== null && current.fret >= 1 && current.fret <= 9;
+      if (canCombine) {
         fret = current.fret * 10 + num;
         if (fret > 24) fret = num;
       } else {
@@ -89,11 +129,27 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
       }
       update(newMeasures);
 
-      let nb = b + 1, nm = m;
-      if (nb >= BEATS_PER_MEASURE) { nb = 0; nm++; }
-      if (nm < newMeasures.length) setSelectedCell({ m: nm, b: nb, s });
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+
+      const shouldWait = fret >= 1 && fret <= 9 && !canCombine;
+      if (shouldWait) {
+        pendingAdvanceRef.current = { m, b, s };
+        advanceTimerRef.current = setTimeout(() => {
+          pendingAdvanceRef.current = null;
+          advanceTimerRef.current = null;
+          let nb = b + 1, nm = m;
+          if (nb >= BEATS_PER_MEASURE) { nb = 0; nm++; }
+          if (nm < newMeasures.length) setSelectedCell({ m: nm, b: nb, s });
+        }, 600);
+      } else {
+        pendingAdvanceRef.current = null;
+        advanceTimerRef.current = null;
+        let nb = b + 1, nm = m;
+        if (nb >= BEATS_PER_MEASURE) { nb = 0; nm++; }
+        if (nm < newMeasures.length) setSelectedCell({ m: nm, b: nb, s });
+      }
     }
-  }, [selectedCell, measures, stringCount, update]);
+  }, [selectedCell, measures, stringCount, update, cancelPendingAdvance]);
 
   const addMeasure = () => {
     update([...measures, createEmptyMeasure(stringCount)]);
@@ -110,6 +166,10 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    return () => cancelPendingAdvance();
+  }, [cancelPendingAdvance]);
 
   const scrollContainerRef = useRef(null);
 
@@ -158,6 +218,19 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
 
   return (
     <div className="guitar-tab-editor">
+      <input
+        ref={hiddenInputRef}
+        className="tab-hidden-input"
+        inputMode="numeric"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        onKeyDown={handleHiddenKeyDown}
+        onInput={handleHiddenInput}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       <div className="tab-techniques">
         {TECHNIQUES.map(t => (
           <button
