@@ -1,0 +1,192 @@
+.guitar-tab-editor,
+.drum-tab-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tab-hidden-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.tab-techniques {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.tab-measures-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.tab-measure {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  min-width: fit-content;
+}
+
+.tab-measure-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.tab-measure-num {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.tab-grid {
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  user-select: none;
+}
+
+.tab-string-row {
+  height: 24px;
+}
+
+.tab-string-label {
+  color: var(--text-dim);
+  font-weight: 600;
+  padding: 0 8px 0 0;
+  text-align: right;
+  font-size: 12px;
+  white-space: nowrap;
+  width: 24px;
+  min-width: 24px;
+}
+
+.tab-cell {
+  width: 28px;
+  min-width: 28px;
+  height: 24px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  color: var(--string-line);
+  transition: background .1s;
+  border-top: 1px solid var(--string-line);
+  border-bottom: 1px solid var(--string-line);
+  padding: 0;
+}
+
+.tab-string-row:first-child .tab-cell {
+  border-top: none;
+}
+.tab-string-row:last-child .tab-cell {
+  border-bottom: none;
+}
+
+.tab-cell::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--string-line);
+  z-index: 0;
+}
+
+.tab-cell-filled {
+  color: var(--fret-number);
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.tab-cell-filled::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: var(--bg-card);
+  border-radius: 3px;
+  z-index: -1;
+}
+
+.tab-cell-selected {
+  background: rgba(139, 111, 174, 0.3);
+  outline: 2px solid var(--purple);
+  outline-offset: -2px;
+  border-radius: 3px;
+}
+
+.tab-cell-beat {
+  border-left: 1px solid rgba(85, 85, 128, 0.3);
+}
+
+.tab-cell-playhead {
+  background: rgba(139, 111, 174, 0.45);
+  box-shadow: inset 0 0 0 1px var(--purple-light);
+  border-radius: 2px;
+}
+.tab-cell-playhead.tab-cell-filled {
+  color: #fff;
+}
+.tab-cell-playhead.drum-cell-hit {
+  color: #fff;
+}
+
+/* Drums */
+.drum-grid .tab-cell {
+  border-top: none;
+  border-bottom: none;
+}
+.drum-grid .tab-cell::after {
+  display: none;
+}
+
+.drum-cell {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.drum-cell-hit {
+  color: var(--note-hit);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.drum-row {
+  border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+}
+
+/* Tab viewer (read only) */
+.tab-viewer .tab-cell {
+  cursor: default;
+}
+
+.tab-viewer .tab-measure {
+  background: var(--bg);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tab-grid {
+    font-size: 11px;
+  }
+  .tab-cell {
+    width: 22px;
+    min-width: 22px;
+    height: 20px;
+  }
+  .tab-string-label {
+    font-size: 10px;
+    padding-right: 4px;
+  }
+}

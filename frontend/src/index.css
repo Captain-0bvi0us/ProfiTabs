@@ -1,0 +1,137 @@
+:root {
+  --purple: #8B6FAE;
+  --purple-light: #A68CC7;
+  --purple-dark: #6B4F8E;
+  --blue-light: #B0D8F0;
+  --blue: #AAC4E8;
+  --blue-dark: #7BA3D0;
+  --navy: #2C3555;
+  --navy-deep: #1a1a2e;
+  --bg: #0f0f23;
+  --bg-card: #16213e;
+  --bg-input: #1a1a3e;
+  --text: #e8e8f0;
+  --text-dim: #8888aa;
+  --text-bright: #ffffff;
+  --border: #2a2a4a;
+  --success: #4ade80;
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --string-line: #555580;
+  --fret-number: #FFD700;
+  --note-hit: #8B6FAE;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--purple-light);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  background: var(--bg-input);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--purple);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  transition: all .2s;
+}
+.btn-primary {
+  background: var(--purple);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--purple-dark); }
+.btn-secondary {
+  background: var(--navy);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--border); }
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover { opacity: .85; }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--text);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon:hover { background: var(--border); }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-guitar { background: #4a9eff30; color: #4a9eff; }
+.badge-electric { background: #ff6b4a30; color: #ff6b4a; }
+.badge-bass { background: #4aff8830; color: #4aff88; }
+.badge-drums { background: #ffc04a30; color: #ffc04a; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
