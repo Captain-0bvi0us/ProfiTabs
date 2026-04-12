@@ -97,6 +97,7 @@
   border-bottom: none;
 }
 
+/* Строка струны — под текстом (иначе ::after рисуется поверх содержимого ячейки) */
 .tab-cell::after {
   content: '';
   position: absolute;
@@ -108,11 +109,14 @@
   z-index: 0;
 }
 
+.tab-cell-text {
+  position: relative;
+  z-index: 1;
+}
+
 .tab-cell-filled {
   color: var(--fret-number);
   font-weight: 700;
-  position: relative;
-  z-index: 1;
 }
 
 .tab-cell-filled::before {
@@ -122,6 +126,10 @@
   background: var(--bg-card);
   border-radius: 3px;
   z-index: -1;
+}
+
+.tab-cell-filled .tab-cell-text {
+  z-index: 2;
 }
 
 .tab-cell-selected {

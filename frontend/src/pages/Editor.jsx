@@ -5,8 +5,7 @@ import DrumTabEditor from '../components/TabEditor/DrumTabEditor';
 import PlaybackBar from '../components/PlaybackBar/PlaybackBar';
 import usePlayback from '../hooks/usePlayback';
 import { GUITAR_TUNINGS, BASS_TUNINGS, createEmptyMeasure, createEmptyDrumMeasure } from '../components/TabEditor/constants';
-import { api } from '../api/client';
-import { saveTabOffline } from '../hooks/useOfflineTabs';
+import { saveTab, getTab } from '../hooks/useOfflineTabs';
 
 const INSTRUMENT_OPTIONS = [
   { value: 'guitar', label: 'Гитара' },
@@ -40,25 +39,29 @@ export default function Editor() {
   const playback = usePlayback(totalMeasures, meta.tempo);
 
   useEffect(() => {
-    if (isEdit) {
-      api(`/tabs/${id}/`)
-        .then(data => {
-          setMeta({
-            title: data.title,
-            artist: data.artist,
-            instrument: data.instrument,
-            tempo: data.tempo,
-            time_signature_top: data.time_signature_top,
-            time_signature_bottom: data.time_signature_bottom,
-          });
-          setTabData({
-            tuning: data.tuning || [],
-            measures: data.data?.measures || [],
-          });
-        })
-        .catch(() => setError('Не удалось загрузить таб'))
-        .finally(() => setLoadingTab(false));
-    }
+    if (!isEdit) return;
+    (async () => {
+      try {
+        const data = await getTab(Number(id));
+        if (!data) { setError('Таб не найден'); return; }
+        setMeta({
+          title: data.title,
+          artist: data.artist,
+          instrument: data.instrument,
+          tempo: data.tempo,
+          time_signature_top: data.time_signature_top,
+          time_signature_bottom: data.time_signature_bottom,
+        });
+        setTabData({
+          tuning: data.tuning || data.data?.tuning || [],
+          measures: data.data?.measures || [],
+        });
+      } catch {
+        setError('Не удалось загрузить таб');
+      } finally {
+        setLoadingTab(false);
+      }
+    })();
   }, [id, isEdit]);
 
   const handleInstrumentChange = (instrument) => {
@@ -81,18 +84,13 @@ export default function Editor() {
     setSaving(true);
     setError('');
     try {
-      const payload = {
+      const record = {
+        ...(isEdit ? { id: Number(id) } : {}),
         ...meta,
         tuning: tabData.tuning || [],
         data: { measures: tabData.measures },
       };
-      let saved;
-      if (isEdit) {
-        saved = await api(`/tabs/${id}/`, { method: 'PUT', body: JSON.stringify(payload) });
-      } else {
-        saved = await api('/tabs/', { method: 'POST', body: JSON.stringify(payload) });
-      }
-      await saveTabOffline(saved);
+      const saved = await saveTab(record);
       navigate(`/tab/${saved.id}`);
     } catch (err) {
       setError(err.message || 'Ошибка сохранения');

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../api/client';
-import { syncTabsToOffline, getAllTabsOffline } from '../hooks/useOfflineTabs';
+import { getAllTabs, deleteTab, importTab, parseImportedJSON } from '../hooks/useOfflineTabs';
 
 const INSTR_LABEL = {
   guitar: 'Гитара',
@@ -13,48 +12,40 @@ const INSTR_LABEL = {
 export default function MyTabs() {
   const [tabs, setTabs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [offline, setOffline] = useState(!navigator.onLine);
+  const [importMsg, setImportMsg] = useState('');
+  const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const handleOnline = () => setOffline(false);
-    const handleOffline = () => setOffline(true);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+  const loadTabs = async () => {
+    const items = await getAllTabs();
+    setTabs(items);
+    setLoading(false);
+  };
 
-  useEffect(() => {
-    (async () => {
-      try {
-        if (navigator.onLine) {
-          const data = await api('/tabs/');
-          const items = data.results || data;
-          setTabs(items);
-          syncTabsToOffline(items).catch(() => {});
-        } else {
-          const offlineTabs = await getAllTabsOffline();
-          setTabs(offlineTabs);
-        }
-      } catch {
-        const offlineTabs = await getAllTabsOffline();
-        setTabs(offlineTabs);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [offline]);
+  useEffect(() => { loadTabs(); }, []);
 
   const handleDelete = async (id) => {
     if (!confirm('Удалить эту табулатуру?')) return;
+    await deleteTab(id);
+    setTabs(tabs.filter(t => t.id !== id));
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     try {
-      await api(`/tabs/${id}/`, { method: 'DELETE' });
-      setTabs(tabs.filter(t => t.id !== id));
+      const text = await file.text();
+      const parsed = parseImportedJSON(text);
+      const saved = await importTab(parsed);
+      setImportMsg(`Импортировано: ${saved.title}`);
+      await loadTabs();
+      setTimeout(() => setImportMsg(''), 3000);
     } catch (err) {
-      alert('Ошибка удаления: ' + err.message);
+      setImportMsg(`Ошибка: ${err.message}`);
+      setTimeout(() => setImportMsg(''), 4000);
     }
+
+    e.target.value = '';
   };
 
   if (loading) {
@@ -65,17 +56,36 @@ export default function MyTabs() {
     <div className="my-tabs-page">
       <div className="page-header">
         <h2>Мои табы</h2>
-        <Link to="/editor" className="btn btn-primary">+ Новый</Link>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
+            📥 Импорт
+          </button>
+          <Link to="/editor" className="btn btn-primary">+ Новый</Link>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={handleImport}
+          style={{ display: 'none' }}
+        />
       </div>
 
-      {offline && (
-        <div className="offline-banner">Офлайн-режим — показаны сохранённые табы</div>
+      {importMsg && (
+        <div className={`import-msg card ${importMsg.startsWith('Ошибка') ? 'import-error' : 'import-success'}`}>
+          {importMsg}
+        </div>
       )}
 
       {tabs.length === 0 ? (
         <div className="empty-state card">
           <p>У вас пока нет табулатур</p>
-          <Link to="/editor" className="btn btn-primary" style={{ marginTop: 12 }}>Создать первый таб</Link>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 12 }}>
+            <Link to="/editor" className="btn btn-primary">Создать</Link>
+            <button className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
+              Импортировать
+            </button>
+          </div>
         </div>
       ) : (
         <div className="tabs-list">
@@ -88,7 +98,7 @@ export default function MyTabs() {
               <div className="tab-item-meta">
                 <span className={`badge badge-${tab.instrument}`}>{INSTR_LABEL[tab.instrument]}</span>
                 <span className="tab-item-date">
-                  {new Date(tab.updated_at || tab.created_at).toLocaleDateString('ru')}
+                  {new Date(tab.updated_at).toLocaleDateString('ru')}
                 </span>
               </div>
               <div className="tab-item-actions">
