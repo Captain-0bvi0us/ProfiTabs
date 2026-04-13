@@ -31,22 +31,22 @@
   text-decoration: none;
 }
 
-.app-header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.app-user-name {
+/* Import messages */
+.import-msg {
+  margin-bottom: 16px;
+  padding: 10px 14px;
   font-size: 13px;
-  color: var(--text-dim);
-  display: none;
+  text-align: center;
 }
-
-@media (min-width: 400px) {
-  .app-user-name {
-    display: inline;
-  }
+.import-success {
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: var(--success);
+}
+.import-error {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--danger);
 }
 
 .app-main {
@@ -407,6 +407,24 @@
   font-size: 13px;
   color: var(--text-dim);
   font-weight: 500;
+}
+
+/* Delete confirm modal */
+.delete-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.delete-confirm-dialog {
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 /* Share popup */

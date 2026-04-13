@@ -2,12 +2,25 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+/**
+ * GitHub Pages: сайт открывается как https://<user>.github.io/<имя-репозитория>/
+ * Задаётся при сборке: VITE_BASE_PATH=/ИмяРепо/
+ * Локально: не задавать (будет "/")
+ */
+const base = process.env.VITE_BASE_PATH || '/';
+const navigateFallback =
+  base === '/' ? '/index.html' : `${base.replace(/\/$/, '')}/index.html`;
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      devOptions: {
+        enabled: true,
+      },
+      includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'ProfiTabs',
         short_name: 'ProfiTabs',
@@ -16,31 +29,25 @@ export default defineConfig({
         background_color: '#1a1a2e',
         display: 'standalone',
         orientation: 'any',
-        start_url: '/',
+        start_url: './',
+        scope: './',
         icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https?:\/\/.*\/api\//,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 },
-            },
-          },
-        ],
+        navigateFallback,
       },
     }),
   ],
   server: {
-    host: true,
-    proxy: {
-      '/api': 'http://127.0.0.1:8000',
-    },
+    host: '0.0.0.0',
+    port: 5173,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 4173,
   },
 });

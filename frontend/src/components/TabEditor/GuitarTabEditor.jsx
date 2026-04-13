@@ -140,7 +140,7 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
           let nb = b + 1, nm = m;
           if (nb >= BEATS_PER_MEASURE) { nb = 0; nm++; }
           if (nm < newMeasures.length) setSelectedCell({ m: nm, b: nb, s });
-        }, 600);
+        }, 10000);
       } else {
         pendingAdvanceRef.current = null;
         advanceTimerRef.current = null;
@@ -211,7 +211,7 @@ export default function GuitarTabEditor({ tabData, onChange, instrument, playhea
         className={className}
         onClick={() => handleCellClick(mIdx, bIdx, sIdx)}
       >
-        {display}
+        <span className="tab-cell-text">{display}</span>
       </td>
     );
   };

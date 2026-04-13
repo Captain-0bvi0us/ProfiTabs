@@ -109,7 +109,11 @@ function ViewerMeasures({ measures, isDrums, tuning, playheadMeasure, playheadBe
                       }
                       if (isPlayhead) className += ' tab-cell-playhead';
                       if (isQuarterBeat) className += ' tab-cell-beat';
-                      return <td key={bIdx} className={className}>{display}</td>;
+                      return (
+                        <td key={bIdx} className={className}>
+                          <span className="tab-cell-text">{display}</span>
+                        </td>
+                      );
                     })}
                   </tr>
                 ))}
