@@ -13,6 +13,7 @@ export default function MyTabs() {
   const [tabs, setTabs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [importMsg, setImportMsg] = useState('');
+  const [pendingDelete, setPendingDelete] = useState(null);
   const fileInputRef = useRef(null);
 
   const loadTabs = async () => {
@@ -23,10 +24,18 @@ export default function MyTabs() {
 
   useEffect(() => { loadTabs(); }, []);
 
-  const handleDelete = async (id) => {
-    if (!confirm('Удалить эту табулатуру?')) return;
+  const requestDelete = (tab) => {
+    setPendingDelete({ id: tab.id, title: tab.title || 'без названия' });
+  };
+
+  const cancelDelete = () => setPendingDelete(null);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const { id } = pendingDelete;
+    setPendingDelete(null);
     await deleteTab(id);
-    setTabs(tabs.filter(t => t.id !== id));
+    setTabs((prev) => prev.filter((t) => t.id !== id));
   };
 
   const handleImport = async (e) => {
@@ -103,10 +112,35 @@ export default function MyTabs() {
               </div>
               <div className="tab-item-actions">
                 <Link to={`/editor/${tab.id}`} className="btn btn-secondary btn-sm">Ред.</Link>
-                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(tab.id)}>Уд.</button>
+                <button className="btn btn-danger btn-sm" onClick={() => requestDelete(tab)}>Уд.</button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div className="delete-confirm-backdrop" role="presentation" onClick={cancelDelete}>
+          <div
+            className="delete-confirm-dialog card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-confirm-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="delete-confirm-title" style={{ margin: '0 0 8px', fontSize: 17 }}>Удалить таб?</h3>
+            <p style={{ margin: 0, color: 'var(--text-dim)', fontSize: 14, lineHeight: 1.45 }}>
+              Точно удалить «{pendingDelete.title}»? Восстановить таб из приложения будет нельзя (если нет копии в файле).
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button type="button" className="btn btn-secondary" onClick={cancelDelete}>
+                Отмена
+              </button>
+              <button type="button" className="btn btn-danger" onClick={confirmDelete}>
+                Удалить
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
