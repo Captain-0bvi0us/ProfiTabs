@@ -463,9 +463,39 @@
   margin-bottom: 16px;
 }
 
-/* Tab view page */
-.tab-view-page .page-header {
+/* Tab view page — шапка не уезжает за экран (body overflow-x: hidden) */
+.tab-view-page .tab-view-header {
   position: relative;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 10px;
+  column-gap: 10px;
+}
+
+.tab-view-page .tab-view-header-back {
+  flex-shrink: 0;
+}
+
+.tab-view-page .tab-view-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .tab-view-page .tab-view-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tab-view-page .tab-view-header-actions {
+    justify-content: flex-start;
+  }
 }
 
 /* Responsive */
