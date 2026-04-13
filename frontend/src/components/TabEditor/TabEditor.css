@@ -38,6 +38,9 @@
   border-radius: var(--radius-sm);
   padding: 8px;
   min-width: fit-content;
+  /* Автоскролл к такту (плейбек): не прижимать блок под фиксированный хедер + запас для верхних струн */
+  scroll-margin-top: calc(64px + 32px + env(safe-area-inset-top, 0px));
+  scroll-margin-bottom: 8px;
 }
 
 .tab-measure-header {
